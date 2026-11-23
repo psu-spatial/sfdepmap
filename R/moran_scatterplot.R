@@ -4,6 +4,8 @@
 #   x axis: the value in each area
 #   y axis: the average value in that area's neighbours (the "spatial lag")
 #   The most unusual points are labelled using your label column.
+#   Areas with no neighbours, or with a missing value, are left off the plot
+#   and a message says which ones.
 #   With row-standardised weights (style = "W"), the slope of the line is
 #   Moran's I.
 #
@@ -40,8 +42,9 @@
 #'   [lisa_map()]: a palette number (1 to 6), a palette name, or colours of your own in
 #'   the order High-High, High-Low, Low-High, Low-Low.
 #'
-#' @details With row-standardised weights (`style = "W"`) and at least one neighbour for
-#'   every area, the slope of the line is Moran's I.
+#' @details Areas with no neighbours, or with a missing value, are left off the plot, and a
+#'   message says which ones. With row-standardised weights (`style = "W"`), the slope of
+#'   the line is Moran's I for the areas on the plot.
 #'
 #' @return The plot is drawn. The numbers behind it are returned invisibly: the x value,
 #'   the spatial lag (`wx`), whether the point was labelled (`is_inf`) and the label.
@@ -83,13 +86,39 @@ moran_scatterplot <- function(data, variable, label, neighbours, weights, title 
   neighbours_and_weights <- sfdep::recreate_listw(neighbours, weights)
   
   #------------------------------------------
-  # x is the value in each area. lag_x is the average in its neighbours.
+  # Areas with no neighbours, or with a missing value, are left off the plot.
+  # (An area with no neighbours has no "average of its neighbours" to plot.)
+  # A message says which areas were left off.
   #------------------------------------------
-  x <- data[[variable]]
+  all_x      <- data[[variable]]
+  all_labels <- as.character(data[[label]])
+  has_neighbours <- spdep::card(neighbours) > 0
+  
+  #------------------------------------------
+  # x is the value in each area. lag_x is the average in its neighbours.
+  # If you ask for z-scores, they use only the areas on the plot.
+  #------------------------------------------
+  use <- has_neighbours & !is.na(all_x)
   if (standardise) {
-    x <- (x - mean(x)) / stats::sd(x)
+    all_x <- (all_x - mean(all_x[use])) / stats::sd(all_x[use])
   }
-  lag_x  <- spdep::lag.listw(neighbours_and_weights, x, zero.policy = TRUE)
+  all_lag <- spdep::lag.listw(neighbours_and_weights, all_x, zero.policy = TRUE)
+  use     <- use & !is.na(all_lag)
+  
+  if (sum(use) < 3) {
+    stop("There are fewer than 3 areas with a value and at least one neighbour, ",
+         "so there is nothing to plot.", call. = FALSE)
+  }
+  if (any(!use)) {
+    left_off <- all_labels[!use]
+    shown    <- utils::head(left_off, 10)
+    message(length(left_off), " area(s) left off the scatterplot ",
+            "(no neighbours, or a missing value): ", paste(shown, collapse = ", "),
+            if (length(left_off) > 10) ", ..." else "")
+  }
+  x          <- all_x[use]
+  lag_x      <- all_lag[use]
+  point_labels <- all_labels[use]
   mean_x   <- mean(x)
   mean_lag <- mean(lag_x)
   
@@ -156,7 +185,7 @@ moran_scatterplot <- function(data, variable, label, neighbours, weights, title 
   graphics::points(x[!unusual], lag_x[!unusual], cex = 0.8)
   graphics::points(x[unusual],  lag_x[unusual],  cex = 1.1, pch = 9)
   if (any(unusual)) {
-    graphics::text(x[unusual], lag_x[unusual], labels = as.character(data[[label]])[unusual],
+    graphics::text(x[unusual], lag_x[unusual], labels = point_labels[unusual],
                    pos = 2, cex = 0.7, xpd = NA)
   }
   graphics::box()
@@ -188,6 +217,6 @@ moran_scatterplot <- function(data, variable, label, neighbours, weights, title 
   # Give back the numbers behind the plot (they are not printed)
   #------------------------------------------
   result <- data.frame(x = x, wx = lag_x, is_inf = unusual,
-                       labels = as.character(data[[label]]))
+                       labels = point_labels)
   invisible(result)
 }

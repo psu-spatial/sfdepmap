@@ -50,8 +50,9 @@ area's neighbours, the "spatial lag" (y axis). The most unusual points are
 labelled using your label column.
 }
 \details{
-With row-standardised weights (\code{style = "W"}) and at least one neighbour for
-every area, the slope of the line is Moran's I.
+Areas with no neighbours, or with a missing value, are left off the plot, and a
+message says which ones. With row-standardised weights (\code{style = "W"}), the slope of
+the line is Moran's I for the areas on the plot.
 }
 \examples{
 nc <- sf::st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)

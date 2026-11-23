@@ -165,3 +165,25 @@ test_that("the scatterplot options work and the slope is Moran's I", {
   expect_equal(unname(coef(lm(wx ~ x, data = raw))[2]),    moran_i)
   expect_equal(unname(coef(lm(wx ~ x, data = scaled))[2]), moran_i)
 })
+
+test_that("areas with no neighbours are left off the scatterplot", {
+  grDevices::pdf(NULL, width = 7, height = 6)
+  on.exit(grDevices::dev.off())
+  # cut two counties off from everything else
+  alone <- c(5, 20)
+  nb2 <- lapply(seq_along(nb), function(i) if (i %in% alone) 0L else setdiff(nb[[i]], alone))
+  nb2 <- lapply(nb2, function(v) if (length(v) == 0) 0L else as.integer(v))
+  attributes(nb2) <- attributes(nb)
+  wt2 <- sfdep::st_weights(nb2, style = "W", allow_zero = TRUE)
+
+  expect_message(res <- moran_scatterplot(nc, "BIR74", "NAME", nb2, wt2), "2 area")
+  expect_equal(nrow(res), nrow(nc) - 2)
+  expect_false(any(nc$NAME[alone] %in% res$labels))
+  expect_message(moran_scatterplot(nc, "BIR74", "NAME", nb2, wt2, standardise = TRUE, annotate = TRUE))
+
+  # the slope is Moran's I for the areas that are left
+  keep   <- !(seq_len(nrow(nc)) %in% alone)
+  nb_sub <- spdep::subset.nb(nb2, keep)
+  moran_i <- spdep::moran.test(nc$BIR74[keep], spdep::nb2listw(nb_sub, style = "W"))$estimate[[1]]
+  expect_equal(unname(coef(lm(wx ~ x, data = res))[2]), moran_i)
+})
