@@ -1,6 +1,6 @@
 Package: sfdepmap
 Title: Moran, LISA and Getis-Ord Maps for Teaching Spatial Statistics
-Version: 0.2.4
+Version: 0.3.0
 Authors@R:
     person("Helen", "Greatrex", email = "hlg5155@psu.edu",
            role = c("aut", "cre"))

@@ -33,6 +33,7 @@ lisa_map(data       = Census.sf,
 | Function | What it makes |
 |---|---|
 | `moran_scatterplot()` | Moran's scatterplot |
+| `lisa_scatterplot()` | Moran's scatterplot with points coloured by LISA group |
 | `lisa_map()` | LISA map (Local Moran's I) |
 | `getisstar_map()` | Getis-Ord Gi* hot spot map (each area counted with its neighbours) |
 | `getis_map()` | Getis-Ord Gi hot spot map (each area's neighbours only) |

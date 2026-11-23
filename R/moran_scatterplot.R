@@ -61,6 +61,88 @@
 moran_scatterplot <- function(data, variable, label, neighbours, weights, title = variable,
                               standardise = FALSE, annotate = FALSE, palette = 1) {
   
+  draw_scatterplot(data, variable, label, neighbours, weights, title,
+                   standardise, annotate, palette, lisa = NULL)
+}
+
+
+#------------------------------------------
+# LISA SCATTERPLOT
+#
+#   The same plot as moran_scatterplot(), with every point coloured by its
+#   LISA group (High-High, High-Low, Low-High, Low-Low). Points that are not
+#   significant at your chosen p-value are grey.
+#
+#   The groups and p-values are the same ones lisa_map() uses, so with the
+#   same significance, nsim and seed, the plot matches the map.
+#   The seed that was used is always written under the plot.
+#------------------------------------------
+#' LISA scatterplot
+#'
+#' The same plot as [moran_scatterplot()], with every point coloured by its LISA
+#' group (High-High, High-Low, Low-High, Low-Low). Points that are not significant
+#' at your chosen p-value are grey. The groups and p-values are the ones
+#' [lisa_map()] uses, so with the same `significance`, `nsim` and `seed` the plot
+#' matches the map. The seed that was used is always written under the plot.
+#'
+#' @param data Your sf object, for example `Census.sf`.
+#' @param variable The NAME of the column you want to study, in "quotes".
+#' @param label The NAME of a column that labels each row, in "quotes" (for example `"GEOID"`).
+#' @param neighbours The neighbours you made, for example with `sfdep::st_contiguity()`.
+#' @param weights The weights you made with `sfdep::st_weights()`.
+#' @param title A description of your variable, used on the plots.
+#' @param standardise `TRUE` turns the values into z-scores and makes the plot square.
+#' @param annotate `TRUE` colours in the four quadrants, names them and labels the two
+#'   mean lines.
+#' @param palette The colours for the four LISA groups. These are the same palettes as
+#'   [lisa_map()]: a palette number (1 to 6), a palette name, or colours of your own in
+#'   the order High-High, High-Low, Low-High, Low-Low.
+#' @param significance The p-value cut-off. The default is 0.05.
+#' @param nsim How many random shuffles are used for the p-values. The default is 499.
+#' @param seed The random seed. Leave it out and R picks a new one each time.
+#'
+#' @details A point's LISA group can differ from the quadrant it sits in when it is very
+#'   close to one of the dashed lines, because the LISA calculation measures the
+#'   neighbours' average against the overall mean and the dashed line shows the mean of
+#'   the neighbours' averages.
+#'
+#' @return The plot is drawn. The numbers behind it are returned invisibly, with a
+#'   `lisa_group` column.
+#' @examples
+#' nc <- sf::st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
+#' nc <- sf::st_transform(nc, 32019)   # a flat (projected) map of North Carolina
+#' NeighbourMatrix <- sfdep::st_contiguity(nc)
+#' WeightsMatrix   <- sfdep::st_weights(NeighbourMatrix, style = "W", allow_zero = TRUE)
+#' lisa_scatterplot(nc, "BIR74", "NAME", NeighbourMatrix, WeightsMatrix,
+#'                  title = "Births in 1974", seed = 364)
+#' @export
+lisa_scatterplot <- function(data, variable, label, neighbours, weights, title = variable,
+                             standardise = FALSE, annotate = FALSE, palette = 1,
+                             significance = 0.05, nsim = 499, seed = NULL) {
+  
+  result <- make_lisa(data, variable, label, neighbours, weights, title, data_source = NULL,
+                      mode = "plot", significance, nsim, global_stats = FALSE,
+                      colours = if (is.character(palette) && length(palette) == 4) c(palette, "white") else palette,
+                      basemap = FALSE, seed = seed)
+  
+  lisa <- list(groups       = result$data$Quadrant_sig,
+               significance = significance,
+               nsim         = nsim,
+               seed         = result$seed)
+  
+  draw_scatterplot(data, variable, label, neighbours, weights, title,
+                   standardise, annotate, palette, lisa = lisa)
+}
+
+
+#------------------------------------------
+# The drawing code behind moran_scatterplot() and lisa_scatterplot().
+#   lisa = NULL   plain points
+#   lisa = a list with the LISA group of every area: coloured points
+#------------------------------------------
+draw_scatterplot <- function(data, variable, label, neighbours, weights, title,
+                             standardise, annotate, palette, lisa = NULL) {
+  
   check_autocorrelation_inputs(data, variable, label, neighbours, weights)
   
   if (!isTRUE(standardise) && !isFALSE(standardise)) {
@@ -119,6 +201,16 @@ moran_scatterplot <- function(data, variable, label, neighbours, weights, title 
   x          <- all_x[use]
   lag_x      <- all_lag[use]
   point_labels <- all_labels[use]
+  
+  #------------------------------------------
+  # For a LISA scatterplot: the colour of every point.
+  # Not significant points are grey.
+  #------------------------------------------
+  point_colours <- NULL
+  if (!is.null(lisa)) {
+    group_colours <- c(quadrant_colours, "grey80")
+    point_colours <- group_colours[as.integer(lisa$groups)][use]
+  }
   mean_x   <- mean(x)
   mean_lag <- mean(lag_x)
   
@@ -150,9 +242,11 @@ moran_scatterplot <- function(data, variable, label, neighbours, weights, title 
   old_settings <- graphics::par(c("mar", "mgp", "pty"))
   on.exit(graphics::par(old_settings))
   
+  note_line <- if (annotate && standardise) 4.9 else 3.4      # where the LISA note goes
   margins <- c(4, 4, 1, 1)                            # bottom, left, top, right
   if (annotate)                margins <- c(4, 4, 2, 6.5)
   if (annotate && standardise) margins <- c(5, 4, 2, 6.5)
+  if (!is.null(lisa)) margins[1] <- note_line + 1.3
   graphics::par(mar = margins,
                 mgp = c(2.2, 0.6, 0))                 # distance of: axis label, tick numbers, axis line
   if (standardise) graphics::par(pty = "s")           # a square plot
@@ -182,8 +276,16 @@ moran_scatterplot <- function(data, variable, label, neighbours, weights, title 
   graphics::abline(v = mean_x,   lty = 2)
   graphics::abline(h = mean_lag, lty = 2)
   graphics::abline(best_fit)
-  graphics::points(x[!unusual], lag_x[!unusual], cex = 0.8)
-  graphics::points(x[unusual],  lag_x[unusual],  cex = 1.1, pch = 9)
+  if (is.null(lisa)) {
+    graphics::points(x[!unusual], lag_x[!unusual], cex = 0.8)
+    graphics::points(x[unusual],  lag_x[unusual],  cex = 1.1, pch = 9)
+  } else {
+    # filled circles, and filled diamonds for the labelled points
+    graphics::points(x[!unusual], lag_x[!unusual], cex = 0.9, pch = 21,
+                     bg = point_colours[!unusual], col = "grey30", lwd = 0.6)
+    graphics::points(x[unusual],  lag_x[unusual],  cex = 1.1, pch = 23,
+                     bg = point_colours[unusual],  col = "black",  lwd = 0.8)
+  }
   if (any(unusual)) {
     # labels go to the left of the point, or to the right if the point is
     # close to the left edge of the plot
@@ -217,9 +319,22 @@ moran_scatterplot <- function(data, variable, label, neighbours, weights, title 
   }
   
   #------------------------------------------
+  # For a LISA scatterplot: a note under the plot, which includes the seed
+  #------------------------------------------
+  if (!is.null(lisa)) {
+    graphics::mtext(paste0("Point colour = LISA group where p <= ", lisa$significance,
+                           ". Grey = not significant. ",
+                           lisa$nsim, " random permutations (seed = ", lisa$seed, ")."),
+                    side = 1, line = note_line, cex = 0.6, col = "grey30")
+  }
+  
+  #------------------------------------------
   # Give back the numbers behind the plot (they are not printed)
   #------------------------------------------
   result <- data.frame(x = x, wx = lag_x, is_inf = unusual,
                        labels = point_labels)
+  if (!is.null(lisa)) {
+    result$lisa_group <- lisa$groups[use]
+  }
   invisible(result)
 }

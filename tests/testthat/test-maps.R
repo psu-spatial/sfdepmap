@@ -187,3 +187,16 @@ test_that("areas with no neighbours are left off the scatterplot", {
   moran_i <- spdep::moran.test(nc$BIR74[keep], spdep::nb2listw(nb_sub, style = "W"))$estimate[[1]]
   expect_equal(unname(coef(lm(wx ~ x, data = res))[2]), moran_i)
 })
+
+test_that("the LISA scatterplot draws and matches lisa_map", {
+  grDevices::pdf(NULL, width = 7, height = 6)
+  on.exit(grDevices::dev.off())
+  res <- lisa_scatterplot(nc, "BIR74", "NAME", nb, wt, seed = 5, significance = 0.1)
+  expect_no_error(lisa_scatterplot(nc, "BIR74", "NAME", nb, wt, seed = 5,
+                                   standardise = TRUE, annotate = TRUE, palette = "bright"))
+  expect_no_error(lisa_scatterplot(nc, "BIR74", "NAME", nb, wt,
+                                   palette = c("purple", "orchid", "lightgreen", "darkgreen")))
+  from_map <- lisa_map(nc, "BIR74", "NAME", nb, wt, seed = 5, significance = 0.1,
+                       silent = TRUE, return_data = TRUE)
+  expect_equal(as.character(res$lisa_group), as.character(from_map$Quadrant_sig))
+})

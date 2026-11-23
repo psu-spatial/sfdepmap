@@ -11,6 +11,7 @@ Functions that each make one plot from your data:
 \details{
 \itemize{
 \item \code{\link[=moran_scatterplot]{moran_scatterplot()}}: Moran's scatterplot
+\item \code{\link[=lisa_scatterplot]{lisa_scatterplot()}}: Moran's scatterplot with points coloured by LISA group
 \item \code{\link[=lisa_map]{lisa_map()}}: LISA map (Local Moran's I)
 \item \code{\link[=getisstar_map]{getisstar_map()}}: Getis-Ord Gi* hot spot map (each area counted WITH its neighbours)
 \item \code{\link[=getis_map]{getis_map()}}: Getis-Ord Gi hot spot map (each area's neighbours ONLY)
