@@ -16,6 +16,9 @@ getisstar_map(
   mode = "plot",
   palette = 1,
   basemap = FALSE,
+  nsim = 499,
+  seed = NULL,
+  adjust_p = FALSE,
   silent = FALSE,
   return_data = FALSE
 )
@@ -31,6 +34,9 @@ getis_map(
   mode = "plot",
   palette = 1,
   basemap = FALSE,
+  nsim = 499,
+  seed = NULL,
+  adjust_p = FALSE,
   silent = FALSE,
   return_data = FALSE
 )
@@ -63,25 +69,38 @@ cold spot 99\% to hot spot 99\%.}
 background map, or the name of a background map such as \code{"OpenStreetMap"}.
 Background maps need the internet.}
 
+\item{nsim}{How many random shuffles are used for the p-values. The default is 499.}
+
+\item{seed}{The random seed. Leave it out and R picks a new one each time.
+Give a whole number to get the same map every time.}
+
+\item{adjust_p}{\code{TRUE} adjusts the p-values for the number of tests
+(Benjamini-Hochberg). This is stricter, so expect fewer hot and cold spots.
+The default is \code{FALSE}.}
+
 \item{silent}{\code{TRUE} means do not print the table of groups.}
 
 \item{return_data}{\code{TRUE} gives back your data with the results added as new columns
-(\code{getisstar.z} and \code{getisstar.cluster}, or \code{getis.z} and \code{getis.cluster}),
-in place of the map.}
+(\code{getisstar.z}, \code{getisstar.pvalue} and \code{getisstar.cluster}, or \code{getis.z},
+\code{getis.pvalue} and \code{getis.cluster}), in place of the map.}
 }
 \value{
 A map. Type its name to see it.
 }
 \description{
-Both give every area a z-score. A large positive z-score is a hot spot
-(high values clustered together) and a large negative z-score is a cold
-spot. The z-scores are cut into 7 groups at 90\%, 95\% and 99\% confidence.
+Both give every area a z-score and a p-value. A positive z-score with a
+small p-value is a hot spot (high values clustered together) and a negative
+z-score with a small p-value is a cold spot. The p-values come from random
+shuffles of the data, using \code{sfdep::local_g_perm()} and
+\code{sfdep::local_gstar_perm()}. Areas are put into 7 groups: 90\%, 95\% and 99\%
+confidence mean p <= 0.10, 0.05 and 0.01.
 }
 \details{
 \code{getisstar_map()} makes a Gi* ("G-i-star") map: each area is counted
 TOGETHER WITH its neighbours. \code{getis_map()} makes a Gi map: each area's own
-value is LEFT OUT and only its neighbours are used. These maps use no
-random numbers, so they have no seed.
+value is LEFT OUT and only its neighbours are used. The map changes
+slightly each time unless you give a \code{seed}. The seed that was used is
+always written under the map.
 }
 \examples{
 nc <- sf::st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
@@ -89,7 +108,7 @@ nc <- sf::st_transform(nc, 32019)   # a flat (projected) map of North Carolina
 NeighbourMatrix <- sfdep::st_contiguity(nc)
 WeightsMatrix   <- sfdep::st_weights(NeighbourMatrix, style = "W", allow_zero = TRUE)
 GETISSTARmap <- getisstar_map(nc, "BIR74", "NAME", NeighbourMatrix, WeightsMatrix,
-                              title = "Births in 1974")
+                              title = "Births in 1974", seed = 364)
 GETISmap     <- getis_map(nc, "BIR74", "NAME", NeighbourMatrix, WeightsMatrix,
-                          title = "Births in 1974")
+                          title = "Births in 1974", seed = 364, adjust_p = TRUE)
 }

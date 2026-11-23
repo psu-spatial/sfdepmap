@@ -235,7 +235,7 @@ combined_caption <- function(recipes, explanation = TRUE) {
     
     # The shared notes, on one new line. "No correction..." goes last
     shared      <- pick("shared")
-    last        <- shared == "No correction for multiple tests."
+    last        <- grepl("multiple tests", shared)
     shared_line <- paste(c(shared[!last], shared[last]), collapse = " ")
     
     explanation_block <- c(method_line, shared_line)
@@ -251,7 +251,7 @@ combined_caption <- function(recipes, explanation = TRUE) {
   #------------------------------------------
   end_block <- paste(c(pick("source"), credits), collapse = " ")
   if (!explanation && length(seed) > 0) {
-    end_block <- c(paste0("Random seed for the LISA p-values: ", seed, "."), end_block)
+    end_block <- c(paste0("Random seed: ", seed, "."), end_block)
   }
   
   #------------------------------------------

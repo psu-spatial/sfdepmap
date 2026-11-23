@@ -525,8 +525,12 @@ glimpse(LISAdata)
 #     It asks: "is this tract part of a cluster?"
 #     This is the version used by the Esri Hot Spot Analysis tool.
 #
-#     The options are the same as for lisa_map(), apart from significance,
-#     nsim and global_stats. There are 5 palettes (see the functions file).
+#     The p-values come from random shuffles of the data, so give a seed
+#     to get the same map every time. The options are the same as for
+#     lisa_map(), apart from significance and global_stats, plus:
+#        adjust_p = TRUE   adjust the p-values for the number of tests
+#                          (Benjamini-Hochberg). Stricter: fewer hot and cold spots.
+#     There are 5 palettes (run ?getisstar_map to see them).
 #============================================================================
 
 GETISSTARmap <- getisstar_map(data        = Census.sf,
@@ -535,7 +539,8 @@ GETISSTARmap <- getisstar_map(data        = Census.sf,
                               neighbours  = NeighbourMatrix,
                               weights     = WeightsMatrix,
                               title       = "Percentage of people making >$75K",
-                              data_source = "Data: American Community Survey 2020-2024 (5-year estimates), census tracts, 1st order Queens.")
+                              data_source = "Data: American Community Survey 2020-2024 (5-year estimates), census tracts, 1st order Queens.",
+                              seed        = 364)
 
 GETISSTARmap
 
@@ -560,7 +565,8 @@ GETISmap <- getis_map(data        = Census.sf,
                       weights     = WeightsMatrix,
                       title       = "Percentage of people making >$75K",
                       data_source = "Data: American Community Survey 2020-2024 (5-year estimates), census tracts, 1st order Queens.",
-                      palette     = 3)
+                      palette     = 3,
+                      seed        = 364)
 
 GETISmap
 

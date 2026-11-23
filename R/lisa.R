@@ -33,7 +33,6 @@
 #   The p-values come from random shuffles, so they change slightly each time.
 #   To get the same map every time, give a seed, for example  seed = 364
 #   The seed that was used is always written under the map.
-#   (The Getis-Ord maps use no random numbers, so they have no seed.)
 #============================================================================
 lisa_palettes <- list(
   red_blue   = c("#ca0020", "#f4a582", "#92c5de", "#0571b0", "white"),

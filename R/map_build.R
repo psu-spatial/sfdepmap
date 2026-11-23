@@ -37,7 +37,7 @@ build_autocorrelation_map <- function(recipe, panel_width = 7, in_panel = FALSE,
   #------------------------------------------
   if (recipe$interactive) {
     
-    # A view map has no caption, so a LISA map's seed goes under its legend title
+    # A view map has no caption, so the seed goes under the legend title
     legend_title <- recipe$legend_title
     if (!is.null(recipe$seed)) {
       legend_title <- paste0(legend_title, "\nRandom seed: ", recipe$seed)

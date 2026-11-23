@@ -19,7 +19,8 @@ autocorrelation_summary(
   seed = NULL,
   explanation = TRUE,
   global_stats = TRUE,
-  units = "Value"
+  units = "Value",
+  adjust_p = FALSE
 )
 }
 \arguments{
@@ -58,6 +59,9 @@ Give a whole number to get the same map every time.}
 
 \item{units}{What your numbers are, for example \code{"Percentage"}. It is used as the
 title of the legend on map A.}
+
+\item{adjust_p}{\code{TRUE} adjusts the Getis-Ord p-values (maps C and D) for the
+number of tests (Benjamini-Hochberg). The LISA map is not adjusted.}
 }
 \value{
 A figure. Type its name to see it.

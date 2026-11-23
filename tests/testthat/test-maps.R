@@ -40,16 +40,38 @@ test_that("data_source = FALSE does not write FALSE under the map", {
   expect_match(caption_of(map), "Data: test.", fixed = TRUE)
 })
 
-test_that("the Getis-Ord maps work and have no seed", {
-  star <- getisstar_map(nc, "BIR74", "NAME", nb, wt, silent = TRUE, return_data = TRUE)
+test_that("the Getis-Ord maps work, and the seed makes them repeatable", {
+  star <- getisstar_map(nc, "BIR74", "NAME", nb, wt, seed = 364, silent = TRUE, return_data = TRUE)
   expect_equal(nlevels(star$getisstar.cluster), 7)
+  expect_true(all(c("getisstar.z", "getisstar.pvalue", "getisstar.cluster") %in% names(star)))
 
-  plain <- getis_map(nc, "BIR74", "NAME", nb, wt, silent = TRUE, return_data = TRUE)
+  plain  <- getis_map(nc, "BIR74", "NAME", nb, wt, seed = 364, silent = TRUE, return_data = TRUE)
+  again  <- getis_map(nc, "BIR74", "NAME", nb, wt, seed = 364, silent = TRUE, return_data = TRUE)
   expect_equal(nlevels(plain$getis.cluster), 7)
+  expect_identical(plain$getis.pvalue, again$getis.pvalue)
 
-  map <- getisstar_map(nc, "BIR74", "NAME", nb, wt, silent = TRUE)
-  expect_no_match(caption_of(map), "seed", fixed = TRUE)
-  expect_error(getis_map(nc, "BIR74", "NAME", nb, wt, seed = 1))
+  map <- getisstar_map(nc, "BIR74", "NAME", nb, wt, seed = 364, silent = TRUE)
+  expect_match(caption_of(map), "seed = 364", fixed = TRUE)
+  expect_match(caption_of(map), "No correction for multiple tests", fixed = TRUE)
+})
+
+test_that("the Getis-Ord results match sfdep's own, and adjust_p applies Benjamini-Hochberg", {
+  set.seed(364)
+  direct <- sfdep::local_g_perm(nc$BIR74, nb, wt, nsim = 499, zero.policy = TRUE)
+
+  plain <- getis_map(nc, "BIR74", "NAME", nb, wt, seed = 364, silent = TRUE, return_data = TRUE)
+  expect_equal(plain$getis.z, direct$std_dev)
+  expect_equal(plain$getis.pvalue, direct$p_sim)
+
+  strict <- getis_map(nc, "BIR74", "NAME", nb, wt, seed = 364, silent = TRUE,
+                      return_data = TRUE, adjust_p = TRUE)
+  expect_equal(strict$getis.pvalue, stats::p.adjust(direct$p_sim, method = "BH"))
+  expect_lte(sum(strict$getis.cluster != "Not Significant"),
+             sum(plain$getis.cluster  != "Not Significant"))
+
+  map <- getis_map(nc, "BIR74", "NAME", nb, wt, seed = 364, silent = TRUE, adjust_p = TRUE)
+  expect_match(caption_of(map), "Benjamini-Hochberg", fixed = TRUE)
+  expect_error(getis_map(nc, "BIR74", "NAME", nb, wt, adjust_p = "yes"), "adjust_p")
 })
 
 test_that("mistakes give plain-language errors", {
@@ -65,7 +87,7 @@ test_that("the summary figure builds its caption and draws", {
                                  units = "Births", seed = 364, data_source = "Data: test.")
   caption <- paste(sfdepmap:::combined_caption(attr(fig, "recipes")), collapse = "\n")
   expect_match(caption, "A: Choropleth of the raw data (Jenks)", fixed = TRUE)
-  expect_match(caption, "seed = 364", fixed = TRUE)
+  expect_match(caption, "seed = 364, also used for C and D", fixed = TRUE)
   expect_match(caption, "Global statistics", fixed = TRUE)
   expect_match(caption, "General G (binary weights)", fixed = TRUE)
   expect_equal(lengths(regmatches(caption, gregexpr("No correction for multiple tests", caption))), 1)
@@ -73,7 +95,12 @@ test_that("the summary figure builds its caption and draws", {
   no_text <- autocorrelation_summary(nc, "BIR74", "NAME", nb, wt, seed = 364,
                                      explanation = FALSE, global_stats = FALSE)
   caption <- paste(sfdepmap:::combined_caption(attr(no_text, "recipes"), explanation = FALSE), collapse = "\n")
-  expect_match(caption, "Random seed for the LISA p-values: 364", fixed = TRUE)
+  expect_match(caption, "Random seed: 364", fixed = TRUE)
+
+  strict <- autocorrelation_summary(nc, "BIR74", "NAME", nb, wt, seed = 364, adjust_p = TRUE)
+  caption <- paste(sfdepmap:::combined_caption(attr(strict, "recipes")), collapse = "\n")
+  expect_match(caption, "LISA: no correction for multiple tests", fixed = TRUE)
+  expect_match(caption, "Benjamini-Hochberg", fixed = TRUE)
 
   # draw it at the recommended size (nothing is saved)
   grDevices::pdf(NULL, width = 9, height = 11)
