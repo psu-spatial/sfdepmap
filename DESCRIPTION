@@ -1,10 +1,10 @@
 Package: sfdepmap
 Title: Moran, LISA and Getis-Ord Maps for Teaching Spatial Statistics
-Version: 0.2.1
+Version: 0.2.2
 Authors@R:
     person("Helen", "Greatrex", email = "hlg5155@psu.edu",
            role = c("aut", "cre"))
-Description: Functions written for the GEOG-364 spatial statistics course.
+Description: Functions written for Penn State spatial statistics courses.
     Each function takes an 'sf' dataset, a column name, a neighbour list and
     spatial weights, and makes one finished plot: a Moran scatterplot, a LISA
     (Local Moran's I) map, Getis-Ord Gi and Gi* hot spot maps, or a four-map
@@ -16,11 +16,13 @@ Roxygen: list(markdown = TRUE)
 Depends:
     R (>= 4.1.0)
 Imports:
+    graphics,
     grDevices,
     grid,
     sf,
     sfdep,
     spdep,
+    stats,
     tmap (>= 4.0)
 Suggests:
     knitr,

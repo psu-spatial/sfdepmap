@@ -147,3 +147,21 @@ test_that("return_data gives back only the label, the variable, the new columns 
                                  "getisstar.cluster", attr(nc, "sf_column")))
   expect_equal(nrow(out), nrow(nc))
 })
+
+test_that("the scatterplot options work and the slope is Moran's I", {
+  grDevices::pdf(NULL, width = 7, height = 6)
+  on.exit(grDevices::dev.off())
+  before <- graphics::par("mar")
+  raw    <- moran_scatterplot(nc, "BIR74", "NAME", nb, wt)
+  scaled <- moran_scatterplot(nc, "BIR74", "NAME", nb, wt, standardise = TRUE, annotate = TRUE)
+  expect_no_error(moran_scatterplot(nc, "BIR74", "NAME", nb, wt, annotate = TRUE, palette = "bright"))
+  expect_no_error(moran_scatterplot(nc, "BIR74", "NAME", nb, wt, annotate = TRUE,
+                                    palette = c("purple", "orchid", "lightgreen", "darkgreen")))
+  expect_error(moran_scatterplot(nc, "BIR74", "NAME", nb, wt, annotate = TRUE, palette = 99))
+  expect_error(moran_scatterplot(nc, "BIR74", "NAME", nb, wt, standardise = "yes"))
+  expect_equal(graphics::par("mar"), before)
+
+  moran_i <- spdep::moran.test(nc$BIR74, sfdep::recreate_listw(nb, wt))$estimate[[1]]
+  expect_equal(unname(coef(lm(wx ~ x, data = raw))[2]),    moran_i)
+  expect_equal(unname(coef(lm(wx ~ x, data = scaled))[2]), moran_i)
+})

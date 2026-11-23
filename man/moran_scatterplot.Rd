@@ -4,7 +4,17 @@
 \alias{moran_scatterplot}
 \title{Moran's scatterplot}
 \usage{
-moran_scatterplot(data, variable, label, neighbours, weights, title = variable)
+moran_scatterplot(
+  data,
+  variable,
+  label,
+  neighbours,
+  weights,
+  title = variable,
+  standardise = FALSE,
+  annotate = FALSE,
+  palette = 1
+)
 }
 \arguments{
 \item{data}{Your sf object, for example \code{Census.sf}.}
@@ -18,14 +28,30 @@ moran_scatterplot(data, variable, label, neighbours, weights, title = variable)
 \item{weights}{The weights you made with \code{sfdep::st_weights()}.}
 
 \item{title}{A description of your variable, used on the plots.}
+
+\item{standardise}{\code{TRUE} turns the values into z-scores (the number of standard
+deviations above/below the mean) and makes the plot square. The slope of the line
+stays the same. The default is \code{FALSE}.}
+
+\item{annotate}{\code{TRUE} colours in the four quadrants, names them (High-High, High-Low,
+Low-High, Low-Low) and labels the two mean lines. The default is \code{FALSE}.}
+
+\item{palette}{The colours used by \code{annotate}. These are the same palettes as
+\code{\link[=lisa_map]{lisa_map()}}: a palette number (1 to 6), a palette name, or colours of your own in
+the order High-High, High-Low, Low-High, Low-Low.}
 }
 \value{
-The plot is drawn. The numbers behind it are returned invisibly.
+The plot is drawn. The numbers behind it are returned invisibly: the x value,
+the spatial lag (\code{wx}), whether the point was labelled (\code{is_inf}) and the label.
 }
 \description{
 Plots the value in each area (x axis) against the average value in that
 area's neighbours, the "spatial lag" (y axis). The most unusual points are
 labelled using your label column.
+}
+\details{
+With row-standardised weights (\code{style = "W"}) and at least one neighbour for
+every area, the slope of the line is Moran's I.
 }
 \examples{
 nc <- sf::st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
@@ -34,4 +60,6 @@ NeighbourMatrix <- sfdep::st_contiguity(nc)
 WeightsMatrix   <- sfdep::st_weights(NeighbourMatrix, style = "W", allow_zero = TRUE)
 moran_scatterplot(nc, "BIR74", "NAME", NeighbourMatrix, WeightsMatrix,
                   title = "Births in 1974")
+moran_scatterplot(nc, "BIR74", "NAME", NeighbourMatrix, WeightsMatrix,
+                  title = "Births in 1974", standardise = TRUE, annotate = TRUE)
 }
