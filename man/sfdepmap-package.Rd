@@ -22,11 +22,11 @@ column to study, the name of a label column, your neighbours and your
 weights.
 }
 \author{
-\strong{Maintainer}: Helen Greatrex \email{REPLACE.WITH.YOUR.EMAIL@example.com}
+\strong{Maintainer}: Helen Greatrex \email{hlg5155@psu.edu}
 
 Authors:
 \itemize{
-  \item Helen Greatrex \email{REPLACE.WITH.YOUR.EMAIL@example.com}
+  \item Helen Greatrex \email{hlg5155@psu.edu}
 }
 
 }

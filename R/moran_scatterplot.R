@@ -135,7 +135,7 @@ moran_scatterplot <- function(data, variable, label, neighbours, weights, title 
   if (standardise) {
     x_title <- paste0(title, " (z-score)")
     y_title <- paste0("Spatial lag of: ", title, " (z-score)")
-    x_limits <- max(abs(c(x, lag_x))) * c(-1.08, 1.08)
+    x_limits <- (max(abs(c(x, lag_x))) + 0.5) * c(-1, 1)   # half a standard deviation beyond the data
     y_limits <- x_limits
   } else {
     x_title <- title
@@ -150,11 +150,11 @@ moran_scatterplot <- function(data, variable, label, neighbours, weights, title 
   old_settings <- graphics::par(c("mar", "mgp", "pty"))
   on.exit(graphics::par(old_settings))
   
-  margins <- c(4, 3.5, 1, 1)                          # bottom, left, top, right
-  if (annotate)                margins <- c(4, 3.5, 2, 6.5)
-  if (annotate && standardise) margins <- c(5, 3.5, 2, 6.5)
+  margins <- c(4, 4, 1, 1)                            # bottom, left, top, right
+  if (annotate)                margins <- c(4, 4, 2, 6.5)
+  if (annotate && standardise) margins <- c(5, 4, 2, 6.5)
   graphics::par(mar = margins,
-                mgp = c(1.8, 0.6, 0))                 # distance of: axis label, tick numbers, axis line
+                mgp = c(2.2, 0.6, 0))                 # distance of: axis label, tick numbers, axis line
   if (standardise) graphics::par(pty = "s")           # a square plot
   
   #------------------------------------------
@@ -185,8 +185,11 @@ moran_scatterplot <- function(data, variable, label, neighbours, weights, title 
   graphics::points(x[!unusual], lag_x[!unusual], cex = 0.8)
   graphics::points(x[unusual],  lag_x[unusual],  cex = 1.1, pch = 9)
   if (any(unusual)) {
+    # labels go to the left of the point, or to the right if the point is
+    # close to the left edge of the plot
+    near_left_edge <- x[unusual] < edges[1] + 0.25 * (edges[2] - edges[1])
     graphics::text(x[unusual], lag_x[unusual], labels = point_labels[unusual],
-                   pos = 2, cex = 0.7, xpd = NA)
+                   pos = ifelse(near_left_edge, 4, 2), cex = 0.7)
   }
   graphics::box()
   
@@ -209,7 +212,7 @@ moran_scatterplot <- function(data, variable, label, neighbours, weights, title 
     graphics::mtext("MEAN(LAG(X))", side = 4, at = mean_lag, line = 0.4, cex = 0.65, font = 2, las = 1)
     if (standardise) {
       graphics::mtext("(NUMBER OF STANDARD DEVIATIONS ABOVE/BELOW MEAN)",
-                      side = 1, line = 3.2, cex = 0.6, font = 2)
+                      side = 1, line = 3.6, cex = 0.6, font = 2)
     }
   }
   
