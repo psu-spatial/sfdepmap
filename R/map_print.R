@@ -84,6 +84,15 @@ knit_print.autocorrelation_map <- function(x, ...) {
 
 
 #------------------------------------------
+# The data given back by return_data = TRUE: the label column, the column
+# that was studied and the new columns. (An sf object always keeps its geometry.)
+#------------------------------------------
+results_only <- function(data, label, variable, new_columns) {
+  data[, unique(c(label, variable, new_columns))]
+}
+
+
+#------------------------------------------
 # Print a table of how many areas are in each group
 #------------------------------------------
 print_group_table <- function(heading, detail, groups, seed = NULL) {

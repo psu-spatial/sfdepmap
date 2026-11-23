@@ -63,9 +63,9 @@ Give a whole number to get the same map every time.}
 
 \item{silent}{\code{TRUE} means do not print the table of groups.}
 
-\item{return_data}{\code{TRUE} gives back your data with the results added as new columns
-(\code{LocalMoran}, \code{LocalMoran_pvalue}, \code{LocalMoran_Quadrant}, \code{Quadrant_sig}),
-in place of the map.}
+\item{return_data}{\code{TRUE} gives back the results as an sf data object, in place of the
+map. It holds your label column, the column you studied, the geometry and the new
+columns (\code{LocalMoran}, \code{LocalMoran_pvalue}, \code{LocalMoran_Quadrant}, \code{Quadrant_sig}).}
 }
 \value{
 A map. Type its name to see it. In R Markdown, a chunk with

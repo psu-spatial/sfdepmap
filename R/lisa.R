@@ -153,9 +153,9 @@ make_lisa <- function(data, variable, label, neighbours, weights, title, data_so
 #' @param seed The random seed. Leave it out and R picks a new one each time.
 #'   Give a whole number to get the same map every time.
 #' @param silent `TRUE` means do not print the table of groups.
-#' @param return_data `TRUE` gives back your data with the results added as new columns
-#'   (`LocalMoran`, `LocalMoran_pvalue`, `LocalMoran_Quadrant`, `Quadrant_sig`),
-#'   in place of the map.
+#' @param return_data `TRUE` gives back the results as an sf data object, in place of the
+#'   map. It holds your label column, the column you studied, the geometry and the new
+#'   columns (`LocalMoran`, `LocalMoran_pvalue`, `LocalMoran_Quadrant`, `Quadrant_sig`).
 #'
 #' @return A map. Type its name to see it. In R Markdown, a chunk with
 #'   `fig.width=7, fig.height=6` gives it enough room.
@@ -183,7 +183,8 @@ lisa_map <- function(data, variable, label, neighbours, weights, title = variabl
   }
   
   if (return_data) {
-    return(result$data)
+    return(results_only(result$data, label, variable,
+                        c("LocalMoran", "LocalMoran_pvalue", "LocalMoran_Quadrant", "Quadrant_sig")))
   }
   
   new_autocorrelation_map(list(result$recipe))

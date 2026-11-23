@@ -213,9 +213,10 @@ make_getis <- function(star, data, variable, label, neighbours, weights, title, 
 #' @param adjust_p `TRUE` adjusts the p-values for the number of tests
 #'   (Benjamini-Hochberg). This is stricter, so expect fewer hot and cold spots.
 #'   The default is `FALSE`.
-#' @param return_data `TRUE` gives back your data with the results added as new columns
-#'   (`getisstar.z`, `getisstar.pvalue` and `getisstar.cluster`, or `getis.z`,
-#'   `getis.pvalue` and `getis.cluster`), in place of the map.
+#' @param return_data `TRUE` gives back the results as an sf data object, in place of the
+#'   map. It holds your label column, the column you studied, the geometry and the new
+#'   columns (`getisstar.z`, `getisstar.pvalue` and `getisstar.cluster`, or `getis.z`,
+#'   `getis.pvalue` and `getis.cluster`).
 #'
 #' @return A map. Type its name to see it.
 #' @examples
@@ -244,7 +245,8 @@ getisstar_map <- function(data, variable, label, neighbours, weights, title = va
   }
   
   if (return_data) {
-    return(result$data)
+    return(results_only(result$data, label, variable,
+                        c("getisstar.z", "getisstar.pvalue", "getisstar.cluster")))
   }
   
   new_autocorrelation_map(list(result$recipe))
@@ -272,7 +274,8 @@ getis_map <- function(data, variable, label, neighbours, weights, title = variab
   }
   
   if (return_data) {
-    return(result$data)
+    return(results_only(result$data, label, variable,
+                        c("getis.z", "getis.pvalue", "getis.cluster")))
   }
   
   new_autocorrelation_map(list(result$recipe))

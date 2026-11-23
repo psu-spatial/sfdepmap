@@ -464,8 +464,8 @@ LISAmap
 #   seed          a whole number = use that random seed (the same map every time)
 #                 left out       = R picks a new seed each time
 #   silent        TRUE = do not print the table
-#   return_data   TRUE = give back your data with the LISA results added as
-#                 new columns, in place of the map
+#   return_data   TRUE = give back the LISA results as data, in place of the map
+#                 (your label column, your variable, the new columns, the geometry)
 #----------------------------------------------------------------------
 LISAmap <- lisa_map(data         = Census.sf,
                     variable     = "percent_income_gt75",

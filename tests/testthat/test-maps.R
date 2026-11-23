@@ -131,3 +131,19 @@ test_that("the General G uses binary weights, whatever weights are given", {
   expect_match(note_w, paste0("= ", signif(direct$estimate[1], 3)), fixed = TRUE)
   expect_no_warning(sfdepmap:::global_statistics_note(values, nb, wt))
 })
+
+test_that("return_data gives back only the label, the variable, the new columns and the geometry", {
+  out <- lisa_map(nc, "BIR74", "NAME", nb, wt, seed = 1, silent = TRUE, return_data = TRUE)
+  expect_s3_class(out, "sf")
+  expect_identical(names(out), c("NAME", "BIR74", "LocalMoran", "LocalMoran_pvalue",
+                                 "LocalMoran_Quadrant", "Quadrant_sig", attr(nc, "sf_column")))
+
+  out <- getis_map(nc, "BIR74", "NAME", nb, wt, seed = 1, silent = TRUE, return_data = TRUE)
+  expect_identical(names(out), c("NAME", "BIR74", "getis.z", "getis.pvalue", "getis.cluster",
+                                 attr(nc, "sf_column")))
+
+  out <- getisstar_map(nc, "BIR74", "NAME", nb, wt, seed = 1, silent = TRUE, return_data = TRUE)
+  expect_identical(names(out), c("NAME", "BIR74", "getisstar.z", "getisstar.pvalue",
+                                 "getisstar.cluster", attr(nc, "sf_column")))
+  expect_equal(nrow(out), nrow(nc))
+})
