@@ -2,7 +2,7 @@ Package: sfdepmap
 Title: Moran, LISA and Getis-Ord Maps for Teaching Spatial Statistics
 Version: 0.2.0
 Authors@R:
-    person("Helen", "Greatrex", email = "REPLACE.WITH.YOUR.EMAIL@example.com",
+    person("Helen", "Greatrex", email = "hlg5155@psu.edu",
            role = c("aut", "cre"))
 Description: Functions written for the GEOG-364 spatial statistics course.
     Each function takes an 'sf' dataset, a column name, a neighbour list and
